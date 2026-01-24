@@ -10,8 +10,11 @@ const inter = Inter({
 
 export const metadata = {
   title: "Hệ thống quản lý ký túc xá",
-  description: "Quản lý ký túc xá hiện đại và hiệu quả",
+  description: "Hệ thống quản lý ký túc xá hiện đại và hiệu quả",
+  keywords: "ký túc xá, quản lý, sinh viên",
   generator: "v0.app",
+  authors: [{ name: "Dormitory Management System" }],
+  branchSelection: "Lựa chọn chi nhánh có sẵn trong giao diện quản lý",
 }
 
 export default function RootLayout({

@@ -49,7 +49,6 @@ export default function PaymentsPage() {
   const [approvalFilter, setApprovalFilter] = useState("all")
   const [customerFilter, setCustomerFilter] = useState("all")
   const [methodFilter, setMethodFilter] = useState("all")
-  const [branchFilter, setbranchFilter] = useState("all")
   const [monthFilter, setMonthFilter] = useState("all")
   const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -60,6 +59,7 @@ export default function PaymentsPage() {
 
   const [isApprovalDialogOpen, setIsApprovalDialogOpen] = useState(false)
   const [selectedPaymentForApproval, setSelectedPaymentForApproval] = useState<Payment | null>(null)
+  const [branchFilter, setBranchFilter] = useState("all")
 
   const generateMonthOptions = () => {
     const months = []
@@ -101,6 +101,15 @@ export default function PaymentsPage() {
     }
   }
 
+  const calculateVAT = (amount: number) => {
+    const VAT_RATE = 0.1 // 10% VAT
+    return Math.round(amount * VAT_RATE)
+  }
+
+  const getAmountWithVAT = (amount: number) => {
+    return amount + calculateVAT(amount)
+  }
+
   const filteredPayments = mockPayments.filter((payment) => {
     const matchesSearch =
       payment.residentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -110,7 +119,6 @@ export default function PaymentsPage() {
     const matchesStatus = statusFilter === "all" || payment.status === statusFilter
     const matchesCustomer = customerFilter === "all" || payment.residentId === customerFilter
     const matchesMethod = methodFilter === "all" || payment.method === methodFilter
-    const matchesBranch = branchFilter === "all" || payment.branch === branchFilter
     const matchesApproval =
       approvalFilter === "all" ||
       (approvalFilter === "approved" && payment.proofImage && payment.status === "paid") ||
@@ -126,7 +134,6 @@ export default function PaymentsPage() {
       matchesStatus &&
       matchesCustomer &&
       matchesMethod &&
-      matchesBranch &&
       matchesApproval &&
       matchesMonth
     )
@@ -146,17 +153,18 @@ export default function PaymentsPage() {
 
     filteredPayments.forEach((payment) => {
       if (payment.type === "Tiền phòng" || payment.type === "room_fee" || payment.type === "rent") {
-        stats.totalRent += payment.amount
+        const amountWithVAT = getAmountWithVAT(payment.amount)
+        stats.totalRent += amountWithVAT
         stats.totalPayments++
 
         if (payment.status === "paid") {
-          stats.paidRent += payment.amount
+          stats.paidRent += amountWithVAT
           stats.paidCount++
         } else if (payment.status === "pending") {
-          stats.pendingRent += payment.amount
+          stats.pendingRent += amountWithVAT
           stats.pendingCount++
         } else if (payment.status === "overdue") {
-          stats.overdueRent += payment.amount
+          stats.overdueRent += amountWithVAT
           stats.overdueCount++
         }
       }
@@ -376,18 +384,6 @@ export default function PaymentsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={branchFilter} onValueChange={setbranchFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Chi nhánh" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả chi nhánh</SelectItem>
-                  <SelectItem value="Chi nhánh Hà Nội">Chi nhánh Hà Nội</SelectItem>
-                  <SelectItem value="Chi nhánh TP.HCM">Chi nhánh TP.HCM</SelectItem>
-                  <SelectItem value="Chi nhánh Đà Nẵng">Chi nhánh Đà Nẵng</SelectItem>
-                </SelectContent>
-              </Select>
-
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Trạng thái" />
@@ -417,7 +413,6 @@ export default function PaymentsPage() {
                     <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[100px]">Phòng</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[120px]">Số tiền</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[100px]">Phương thức</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[100px]">Chi nhánh</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[100px]">Trạng thái</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[100px]">Minh chứng</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 min-w-[120px]">Thao tác</th>
@@ -438,9 +433,13 @@ export default function PaymentsPage() {
                           <div className="font-medium">{payment.roomName}</div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 font-medium text-sm">{payment.amount.toLocaleString("vi-VN")} ₫</td>
+                      <td className="py-3 px-4 font-medium text-sm">
+                        <div className="flex flex-col gap-1">
+                          <span>{getAmountWithVAT(payment.amount).toLocaleString("vi-VN")} ₫</span>
+                          <span className="text-xs text-gray-500">(+10% VAT)</span>
+                        </div>
+                      </td>
                       <td className="py-3 px-4 text-sm">{payment.method || "Chưa có"}</td>
-                      <td className="py-3 px-4 text-sm">{payment.branch}</td>
                       <td className="py-3 px-4">{getStatusBadge(payment.status)}</td>
                       <td className="py-3 px-4">
                         {payment.proofImage ? (

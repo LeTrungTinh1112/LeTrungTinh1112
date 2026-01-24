@@ -1,887 +1,502 @@
-# HỆ THỐNG QUẢN LÝ KÝ TÚC XÁ - TÀI LIỆU PHÂN TÍCH CHI TIẾT
-
-## 📋 MỤC LỤC
-1. [Tổng quan hệ thống](#1-tổng-quan-hệ-thống)
-2. [Kiến trúc hệ thống](#2-kiến-trúc-hệ-thống)
-3. [Luồng hoạt động](#3-luồng-hoạt-động)
-4. [Cấu trúc dữ liệu](#4-cấu-trúc-dữ-liệu)
-5. [Chức năng chi tiết](#5-chức-năng-chi-tiết)
-6. [Hướng dẫn triển khai](#6-hướng-dẫn-triển-khai)
-
----
+# HỆ THỐNG QUẢN LÝ KÝ TÚC XÁ - TÀI LIỆU HOẠT ĐỘNG
 
 ## 1. TỔNG QUAN HỆ THỐNG
 
-### 1.1 Mục đích
-Hệ thống quản lý ký túc xá được xây dựng để:
-- Quản lý thông tin cư dân, phòng, giường
-- Quản lý hợp đồng thuê phòng
-- Theo dõi thanh toán tiền thuê
-- Xử lý yêu cầu bảo trì
-- Quản lý đăng ký gửi xe
-- Quản lý môi giới (broker)
+Hệ thống Quản Lý Ký Túc Xá là một ứng dụng web hiện đại được xây dựng bằng Next.js 16, giúp quản lý toàn bộ quy trình hoạt động của các ký túc xá từ quản lý cư dân, phòng, thanh toán cho đến bảo trì và báo cáo.
 
-### 1.2 Vai trò người dùng
-Hệ thống hỗ trợ 2 vai trò chính:
-
-#### **ADMIN (Quản trị viên)**
-- Quyền truy cập: Toàn bộ hệ thống
-- Chức năng:
-  - Quản lý cư dân (thêm, sửa, xóa, xem)
-  - Quản lý phòng và giường
-  - Quản lý hợp đồng
-  - Xử lý thanh toán
-  - Xử lý yêu cầu bảo trì
-  - Duyệt đăng ký gửi xe
-  - Quản lý môi giới
-  - Xem thống kê tổng quan
-
-#### **RESIDENT (Cư dân)**
-- Quyền truy cập: Chỉ thông tin cá nhân
-- Chức năng:
-  - Xem thông tin cá nhân
-  - Xem hợp đồng của mình
-  - Xem lịch sử thanh toán
-  - Gửi yêu cầu bảo trì
-  - Đăng ký gửi xe
-  - Xem trạng thái các yêu cầu
+**Phiên bản**: 1.0
+**Nền tảng**: Next.js 16 + React 19 + Tailwind CSS v4
+**Ngôn ngữ**: TypeScript, Vietnamese UI
 
 ---
 
 ## 2. KIẾN TRÚC HỆ THỐNG
 
-### 2.1 Công nghệ sử dụng
-\`\`\`
-Frontend Framework: Next.js 14 (App Router)
-UI Library: React 18
-Styling: Tailwind CSS v4
-Component Library: shadcn/ui
-State Management: React Hooks (useState, useEffect)
-Data Storage: LocalStorage (mock data)
-Authentication: Custom auth với localStorage
-\`\`\`
+### 2.1 Cấu Trúc Thư Mục
 
-### 2.2 Cấu trúc thư mục
-\`\`\`
-dormitorymanagement/
-├── app/                          # Next.js App Router
-│   ├── page.tsx                  # Trang đăng nhập
-│   ├── admin/                    # Dashboard admin
-│   │   └── page.tsx
-│   ├── resident/                 # Dashboard cư dân
-│   │   └── page.tsx
-│   ├── residents/                # Quản lý cư dân
-│   │   ├── page.tsx              # Danh sách cư dân
-│   │   └── add/                  # Thêm cư dân mới
-│   │       └── page.tsx
-│   ├── rooms/                    # Quản lý phòng
-│   │   └── page.tsx
-│   ├── contracts/                # Quản lý hợp đồng
-│   │   └── page.tsx
-│   ├── payments/                 # Quản lý thanh toán
-│   │   └── page.tsx
-│   ├── maintenance/              # Quản lý bảo trì
-│   │   └── page.tsx
-│   ├── parking/                  # Quản lý gửi xe
-│   │   └── page.tsx
-│   ├── brokers/                  # Quản lý môi giới
-│   │   └── page.tsx
-│   └── settings/                 # Cài đặt
-│       └── page.tsx
-├── components/                   # React Components
-│   ├── layout/                   # Layout components
-│   │   ├── main-layout.tsx       # Layout chính
-│   │   ├── sidebar.tsx           # Sidebar navigation
-│   │   └── header.tsx            # Header
-│   └── ui/                       # shadcn/ui components
-│       ├── button.tsx
-│       ├── card.tsx
-│       ├── table.tsx
-│       └── ...
-├── lib/                          # Utilities & Logic
-│   ├── auth.ts                   # Authentication logic
-│   ├── mock-data.ts              # Mock data
-│   └── utils.ts                  # Helper functions
-└── app/globals.css               # Global styles
-\`\`\`
+```
+/app                    # Thư mục ứng dụng chính
+├── /admin             # Trang quản trị
+├── /resident          # Trang cư dân
+├── /dashboard         # Bảng điều khiển
+├── /residents         # Quản lý cư dân
+├── /rooms             # Quản lý phòng
+├── /payments          # Quản lý thanh toán
+├── /contracts         # Quản lý hợp đồng
+├── /maintenance       # Quản lý bảo trì
+├── /parking           # Quản lý đỗ xe
+├── /finance           # Quản lý tài chính
+├── /reports           # Báo cáo
+├── /brokers           # Quản lý môi giới
+├── /manager           # Quản lý ký túc xá
+├── /settings          # Cài đặt
+├── layout.tsx         # Root layout
+├── page.tsx           # Trang login
+└── globals.css        # CSS toàn cục
 
-### 2.3 Luồng dữ liệu
-\`\`\`
-User Input → Component State → Mock Data (lib/mock-data.ts)
-                                      ↓
-                              LocalStorage (auth)
-                                      ↓
-                              Component Re-render
-\`\`\`
+/components           # Thành phần tái sử dụng
+├── /ui               # Thành phần UI cơ bản (Button, Card, etc.)
+└── /layout           # Thành phần layout
+
+/lib                  # Thư viện công cụ
+├── mock-data.ts      # Dữ liệu giả lập
+└── auth.ts           # Logic xác thực
+```
+
+### 2.2 Luồng Dữ Liệu
+
+```
+User Login → Authentication (Mock) → Role Check (Admin/Resident) → Dashboard → Specific Module
+```
 
 ---
 
-## 3. LUỒNG HOẠT ĐỘNG
+## 3. CÁC MODULE CHÍNH
 
-### 3.1 Luồng đăng nhập
+### 3.1 Quản Lý CƯ DÂN (Residents)
+**Đường dẫn**: `/residents`
 
-\`\`\`
-┌─────────────┐
-│ Trang login│
-│ (page.tsx) │
-└──────┬──────┘
-       │
-       │ User nhập username/password
-       ↓
-┌──────────────────┐
-│ authenticateUser │ ← Kiểm tra trong mockUsers
-│   (lib/auth.ts)  │
-└────────┬─────────┘
-         │
-    ┌────┴────┐
-    │ Valid?  │
-    └────┬────┘
-         │
-    ┌────┴────────────────┐
-    │                     │
-   YES                   NO
-    │                     │
-    ↓                     ↓
-┌─────────────┐    ┌──────────┐
-│setCurrentUser│    │Show error│
-│→ localStorage│    └──────────┘
-└──────┬──────┘
-       │
-   ┌───┴────┐
-   │ Role?  │
-   └───┬────┘
-       │
-  ┌────┴─────┐
-  │          │
-admin    resident
-  │          │
-  ↓          ↓
-/admin   /resident
-\`\`\`
+**Chức năng chính**:
+- Xem danh sách cư dân với phân trang (10 dòng/trang)
+- Tìm kiếm theo: tên, email, điện thoại, CCCD
+- Lọc theo: giới tính, trạng thái (Đang ở, Chờ duyệt, Hết hạn)
+- Thêm cư dân mới
+- Xem chi tiết cư dân (hợp đồng, thanh toán, bảo trì)
+- Chỉnh sửa thông tin
+- Xuất báo cáo
 
-### 3.2 Luồng quản lý cư dân (Admin)
-
-\`\`\`
-┌──────────────┐
-│/residents    │ ← Admin truy cập
-│(page.tsx)    │
-└──────┬───────┘
-       │
-       │ Load mockResidents từ lib/mock-data.ts
-       ↓
-┌──────────────────┐
-│ Hiển thị table   │
-│ - Phân trang     │
-│ - Tìm kiếm       │
-│ - Lọc theo status│
-└────────┬─────────┘
-         │
-    ┌────┴────────────────┐
-    │                     │
-  Thêm mới            Chỉnh sửa
-    │                     │
-    ↓                     ↓
-/residents/add      Dialog/Modal
-    │                     │
-    │                     │
-Form nhập liệu      Form chỉnh sửa
-    │                     │
-    ↓                     ↓
-Validate data       Validate data
-    │                     │
-    ↓                     ↓
-Save to state       Update state
-\`\`\`
-
-### 3.3 Luồng thanh toán
-
-\`\`\`
-┌──────────────┐
-│ /payments    │
-└──────┬───────┘
-       │
-       │ Load mockPayments
-       ↓
-┌──────────────────────┐
-│ Hiển thị danh sách   │
-│ - Pending payments   │
-│ - Paid payments      │
-│ - Overdue payments   │
-└────────┬─────────────┘
-         │
-    ┌────┴────┐
-    │ Action? │
-    └────┬────┘
-         │
-    ┌────┴──────────────┐
-    │                   │
-Xác nhận TT        Upload proof
-    │                   │
-    ↓                   ↓
-Update status      Save image URL
-to "paid"          Update payment
-    │                   │
-    └────────┬──────────┘
-             ↓
-      Refresh table
-\`\`\`
-
-### 3.4 Luồng cư dân xem thông tin
-
-\`\`\`
-┌──────────────┐
-│ /resident    │ ← Resident login
-└──────┬───────┘
-       │
-       │ getCurrentUser() từ localStorage
-       ↓
-┌──────────────────────┐
-│ Find resident data   │
-│ by user.email        │
-└────────┬─────────────┘
-         │
-    ┌────┴────────────────────────┐
-    │                             │
-    ↓                             ↓
-Load contracts              Load payments
-by residentId               by residentId
-    │                             │
-    ↓                             ↓
-Load maintenance            Load parking
-by reportedById             by residentId
-    │                             │
-    └──────────┬──────────────────┘
-               ↓
-    ┌──────────────────┐
-    │ Display in tabs: │
-    │ - Info           │
-    │ - Contract       │
-    │ - Payments       │
-    │ - Maintenance    │
-    │ - Parking        │
-    └──────────────────┘
-\`\`\`
+**Dữ liệu chính**:
+- ID, Họ tên, Email, Điện thoại, CCCD
+- Giới tính, Trạng thái, Ảnh đại diện
+- Ngày tạo
 
 ---
 
-## 4. CẤU TRÚC DỮ LIỆU
+### 3.2 Quản Lý PHÒNG (Rooms)
+**Đường dẫn**: `/rooms`
 
-### 4.1 User (Người dùng)
-\`\`\`typescript
-interface User {
-  id: string              // ID duy nhất
-  username: string        // Tên đăng nhập
-  password: string        // Mật khẩu (trong thực tế cần hash)
-  role: string           // "admin" | "resident"
-  name: string           // Họ tên
-  email: string          // Email
-  phone: string          // Số điện thoại
-  gender: string         // "Nam" | "Nữ"
-}
-\`\`\`
+**Chức năng chính**:
+- Xem danh sách phòng với phân trang (10 dòng/trang)
+- Lọc theo: loại phòng, sức chứa, trạng thái
+- Tìm kiếm theo tên hoặc loại phòng
+- Xem chi tiết phòng và tình trạng giường
+- Quản lý loại phòng (thêm, sửa, xóa)
+- Quản lý giường (thêm, sửa, xóa)
+- Xem doanh thu theo phòng
 
-### 4.2 Resident (Cư dân)
-\`\`\`typescript
-interface Resident {
-  id: string              // ID cư dân
-  name: string            // Họ tên
-  cccd: string            // Số CCCD
-  studentId: string       // Mã sinh viên
-  email: string           // Email
-  phone: string           // Số điện thoại
-  dateOfBirth: string     // Ngày sinh (YYYY-MM-DD)
-  address: string         // Địa chỉ
-  emergencyContact: string // Liên hệ khẩn cấp
-  roomId: string | null   // ID phòng (null nếu chưa có)
-  bedId: string | null    // ID giường (null nếu chưa có)
-  status: string          // "active" | "pending" | "expired"
-  avatar: string          // URL avatar
-  gender: string          // "Nam" | "Nữ"
-  broker: string          // Tên môi giới
-  joinDate: string        // Ngày tham gia
-}
-\`\`\`
+**Loại phòng**:
+- Standard: 4 người - 500.000đ/tháng
+- Premium: 2 người - 800.000đ/tháng
+- VIP: 1 người - 1.200.000đ/tháng
 
-### 4.3 Room (Phòng)
-\`\`\`typescript
-interface Room {
-  id: string              // ID phòng
-  name: string            // Tên phòng (VD: A101)
-  floor: number           // Tầng
-  type: string            // "Standard" | "VIP" | "Deluxe"
-  price: number           // Giá thuê/tháng
-  capacity: number        // Sức chứa (số giường)
-  beds: Bed[]            // Danh sách giường
-}
+**Trạng thái phòng**: Hoạt động, Đầy, Sắp trống, Đóng
 
-interface Bed {
-  id: string              // ID giường
-  number: number          // Số giường (1, 2, 3, 4)
-  status: string          // "occupied" | "available"
-  residentName: string | null // Tên cư dân (null nếu trống)
-}
-\`\`\`
-
-### 4.4 Contract (Hợp đồng)
-\`\`\`typescript
-interface Contract {
-  id: string              // Mã hợp đồng (VD: CT001)
-  residentId: string      // ID cư dân
-  residentName: string    // Tên cư dân
-  residentGender: string  // Giới tính
-  roomId: string          // ID phòng
-  roomName: string        // Tên phòng
-  bedId: string           // ID giường
-  startDate: string       // Ngày bắt đầu (YYYY-MM-DD)
-  endDate: string         // Ngày kết thúc (YYYY-MM-DD)
-  monthlyRent: number     // Tiền thuê hàng tháng
-  deposit: number         // Tiền đặt cọc
-  status: string          // "active" | "pending" | "expired"
-  type: string            // "monthly" | "manual"
-  createdAt: string       // Ngày tạo
-  daysUntilExpiry: number // Số ngày còn lại
-  brokerName: string      // Tên môi giới
-}
-\`\`\`
-
-### 4.5 Payment (Thanh toán)
-\`\`\`typescript
-interface Payment {
-  id: string              // Mã thanh toán (VD: PAY001)
-  contractId: string      // Mã hợp đồng
-  residentName: string    // Tên cư dân
-  residentId: string      // ID cư dân
-  roomName: string        // Tên phòng
-  amount: number          // Số tiền
-  type: string            // "rent" | "other"
-  dueDate: string         // Hạn thanh toán (YYYY-MM-DD)
-  paidDate: string | null // Ngày thanh toán (null nếu chưa TT)
-  status: string          // "paid" | "pending" | "overdue"
-  method: string | null   // "Tiền mặt" | "Chuyển khoản"
-  branch: string          // Chi nhánh
-  proofImage: string | null // URL ảnh chứng từ
-}
-\`\`\`
-
-### 4.6 MaintenanceRequest (Yêu cầu bảo trì)
-\`\`\`typescript
-interface MaintenanceRequest {
-  id: string              // Mã yêu cầu (VD: MNT001)
-  title: string           // Tiêu đề
-  description: string     // Mô tả chi tiết
-  roomId: string          // ID phòng
-  roomName: string        // Tên phòng
-  reportedBy: string      // Người báo cáo
-  reportedById: string    // ID người báo cáo
-  assignedTo: string | null // Thợ được giao (null nếu chưa)
-  assignedToPhone: string | null // SĐT thợ
-  priority: string        // "low" | "medium" | "high"
-  status: string          // "pending" | "in_progress" | "completed"
-  cost: number            // Chi phí (0 nếu chưa hoàn thành)
-  createdAt: string       // Ngày tạo
-  updatedAt: string       // Ngày cập nhật
-}
-\`\`\`
-
-### 4.7 ParkingRequest (Đăng ký gửi xe)
-\`\`\`typescript
-interface ParkingRequest {
-  id: string              // Mã đăng ký (VD: PRK001)
-  residentName: string    // Tên cư dân
-  residentId: string      // ID cư dân
-  room: string            // Phòng
-  vehicleType: string     // "Xe máy" | "Xe đạp" | "Xe điện"
-  licensePlate: string    // Biển số (N/A nếu xe đạp)
-  brand: string           // Hãng xe
-  color: string           // Màu sắc
-  requestDate: string     // Ngày đăng ký
-  status: string          // "approved" | "pending" | "rejected"
-  parkingSpot: string | null // Vị trí gửi xe (null nếu chưa duyệt)
-  monthlyFee: number      // Phí hàng tháng
-  externalParkingProof: string | null // Ảnh chứng từ gửi ngoài
-  externalParkingCost: number // Chi phí gửi ngoài
-}
-\`\`\`
-
-### 4.8 Broker (Môi giới)
-\`\`\`typescript
-interface Broker {
-  id: string              // ID môi giới
-  name: string            // Tên môi giới
-  type: string            // "Cư dân" | "Bên ngoài" | "Quản lý"
-  contact: string         // Thông tin liên hệ
-  email: string           // Email
-  totalReferrals: number  // Tổng số giới thiệu
-  activeReferrals: number // Số đang hoạt động
-  revenue: number         // Doanh thu
-  status: string          // "approved" | "pending"
-  joinDate: string        // Ngày tham gia
-  residentId: string | null // ID cư dân (null nếu không phải)
-}
-\`\`\`
+**Trạng thái giường**: Trống, Có người, Sắp trống
 
 ---
 
-## 5. CHỨC NĂNG CHI TIẾT
+### 3.3 Quản Lý THANH TOÁN (Payments)
+**Đường dẫn**: `/payments`
 
-### 5.1 Authentication (Xác thực)
+**Chức năng chính**:
+- Xem danh sách thanh toán với phân trang (10 dòng/trang)
+- Tìm kiếm theo: tên cư dân, mã thanh toán, tên phòng
+- Lọc theo: trạng thái, khách hàng, phương thức, tháng
+- Tạo hóa đơn mới
+- Xem minh chứng thanh toán
+- Duyệt/từ chối thanh toán
+- Chỉnh sửa thông tin thanh toán
 
-**File:** `lib/auth.ts`
+**Loại thanh toán**:
+- Tiền phòng
+- Tiền cọc
+- Dịch vụ
+- Phạt
 
-#### Hàm `authenticateUser(username, password)`
-\`\`\`typescript
-// Mục đích: Xác thực thông tin đăng nhập
-// Input: username (string), password (string)
-// Output: User object (không có password) hoặc null
-// Logic:
-1. Tìm user trong mockUsers có username và password khớp
-2. Nếu tìm thấy: Trả về user (loại bỏ password)
-3. Nếu không: Trả về null
-\`\`\`
+**Trạng thái thanh toán**:
+- Đã thanh toán (Đã hoàn thành)
+- Chờ thanh toán (Đang chờ)
+- Quá hạn (Trễ hạn thanh toán)
 
-#### Hàm `getCurrentUser()`
-\`\`\`typescript
-// Mục đích: Lấy thông tin user đang đăng nhập
-// Input: Không
-// Output: User object hoặc null
-// Logic:
-1. Kiểm tra môi trường (chỉ chạy trên browser)
-2. Đọc "currentUser" từ localStorage
-3. Parse JSON và trả về
-\`\`\`
+**TÍNH TOÁN THUẾ VAT**:
+- Tất cả thanh toán được tính thêm 10% VAT (Value Added Tax)
+- Công thức: Số tiền cuối cùng = Số tiền gốc × 1.10
+- Ví dụ: Thanh toán 500.000đ → Thực tế = 550.000đ (+50.000đ VAT)
+- VAT được hiển thị rõ trong bảng danh sách và biểu mẫu chi tiết
+- Tất cả báo cáo doanh thu đều tính VAT vào
 
-#### Hàm `setCurrentUser(user)`
-\`\`\`typescript
-// Mục đích: Lưu thông tin user vào localStorage
-// Input: user (User object)
-// Output: Không
-// Logic:
-1. Chuyển user object thành JSON string
-2. Lưu vào localStorage với key "currentUser"
-\`\`\`
-
-#### Hàm `logout()`
-\`\`\`typescript
-// Mục đích: Đăng xuất
-// Input: Không
-// Output: Không
-// Logic:
-1. Xóa "currentUser" khỏi localStorage
-2. Redirect về trang login (/)
-\`\`\`
-
-### 5.2 Quản lý cư dân (Admin)
-
-**File:** `app/residents/page.tsx`
-
-#### Chức năng chính:
-1. **Hiển thị danh sách cư dân**
-   - Load dữ liệu từ `mockResidents`
-   - Hiển thị trong table với các cột: Tên, CCCD, MSSV, Email, SĐT, Phòng, Trạng thái
-   - Phân trang: 10 cư dân/trang
-
-2. **Tìm kiếm**
-   - Tìm theo: Tên, CCCD, MSSV, Email, SĐT
-   - Real-time search (onChange)
-
-3. **Lọc theo trạng thái**
-   - Tất cả / Đang ở / Chờ duyệt / Hết hạn
-   - Dropdown select
-
-4. **Thêm cư dân mới**
-   - Button "Thêm cư dân" → Navigate to `/residents/add`
-   - Form nhập đầy đủ thông tin
-   - Validate dữ liệu trước khi lưu
-
-5. **Chỉnh sửa cư dân**
-   - Button "Sửa" trên mỗi row
-   - Mở dialog/modal với form
-   - Pre-fill dữ liệu hiện tại
-   - Validate và update
-
-6. **Xóa cư dân**
-   - Button "Xóa" trên mỗi row
-   - Confirm dialog
-   - Xóa khỏi state
-
-#### Logic phân trang:
-\`\`\`typescript
-const itemsPerPage = 10
-const totalPages = Math.ceil(filteredResidents.length / itemsPerPage)
-const paginatedData = filteredResidents.slice(
-  (currentPage - 1) * itemsPerPage,
-  currentPage * itemsPerPage
-)
-\`\`\`
-
-### 5.3 Quản lý thanh toán (Admin)
-
-**File:** `app/payments/page.tsx`
-
-#### Chức năng chính:
-1. **Hiển thị danh sách thanh toán**
-   - 3 tabs: Chờ thanh toán / Đã thanh toán / Quá hạn
-   - Mỗi tab có table riêng với phân trang
-
-2. **Xác nhận thanh toán**
-   - Button "Xác nhận" trên payment pending
-   - Mở dialog nhập:
-     - Ngày thanh toán
-     - Phương thức (Tiền mặt/Chuyển khoản)
-     - Upload ảnh chứng từ (optional)
-   - Update status → "paid"
-
-3. **Tạo thanh toán thủ công**
-   - Button "Tạo thanh toán"
-   - Form nhập:
-     - Chọn cư dân (dropdown)
-     - Số tiền
-     - Hạn thanh toán
-     - Loại thanh toán
-   - Tạo payment mới với status "pending"
-
-4. **Xem chi tiết**
-   - Click vào row → Mở dialog
-   - Hiển thị đầy đủ thông tin
-   - Nếu có ảnh chứng từ → Hiển thị
-
-#### Logic tự động tạo thanh toán:
-\`\`\`typescript
-// Với hợp đồng type="monthly"
-// Hệ thống tự động tạo payment mỗi tháng
-// Dựa trên contract.monthlyRent và contract.startDate
-\`\`\`
-
-### 5.4 Quản lý bảo trì (Admin)
-
-**File:** `app/maintenance/page.tsx`
-
-#### Chức năng chính:
-1. **Hiển thị danh sách yêu cầu**
-   - 3 tabs: Chờ xử lý / Đang xử lý / Hoàn thành
-   - Card view (không phải table)
-   - Phân trang: 10 yêu cầu/trang
-
-2. **Giao việc cho thợ**
-   - Button "Giao việc" trên request pending
-   - Form chọn:
-     - Tên thợ
-     - SĐT thợ
-   - Update status → "in_progress"
-
-3. **Hoàn thành công việc**
-   - Button "Hoàn thành" trên request in_progress
-   - Form nhập:
-     - Chi phí sửa chữa
-     - Ghi chú (optional)
-   - Update status → "completed"
-
-4. **Xem chi tiết**
-   - Click vào card → Mở dialog
-   - Hiển thị đầy đủ thông tin
-   - Lịch sử cập nhật
-
-### 5.5 Dashboard cư dân
-
-**File:** `app/resident/page.tsx`
-
-#### Chức năng chính:
-1. **Thông tin tổng quan**
-   - Avatar, tên, phòng, giường
-   - 4 cards thống kê:
-     - Hợp đồng (còn bao nhiêu ngày)
-     - Thanh toán (số khoản chờ TT)
-     - Bảo trì (số yêu cầu đã gửi)
-     - Gửi xe (trạng thái)
-
-2. **Tab Thông tin**
-   - Hiển thị thông tin cá nhân
-   - Read-only (không cho sửa)
-
-3. **Tab Hợp đồng**
-   - Hiển thị hợp đồng hiện tại
-   - Progress bar thời gian còn lại
-   - Thông tin chi tiết: Ngày bắt đầu, kết thúc, tiền thuê, cọc
-
-4. **Tab Thanh toán**
-   - Alert box: Các khoản chờ thanh toán (màu đỏ)
-   - Table: Lịch sử thanh toán đã hoàn thành
-   - Phân trang: 10 thanh toán/trang
-
-5. **Tab Bảo trì**
-   - Danh sách yêu cầu đã gửi
-   - Hiển thị trạng thái: Chờ xử lý / Đang xử lý / Hoàn thành
-   - Phân trang: 10 yêu cầu/trang
-
-6. **Tab Gửi xe**
-   - Nếu đã đăng ký: Hiển thị thông tin xe, vị trí
-   - Nếu chưa: Button "Đăng ký gửi xe"
+**Phương thức thanh toán**: Tiền mặt, Chuyển khoản
 
 ---
 
-## 6. HƯỚNG DẪN TRIỂN KHAI
+### 3.4 Quản Lý HỢP ĐỒNG (Contracts)
+**Đường dẫn**: `/contracts`
 
-### 6.1 Cài đặt môi trường
+**Chức năng chính**:
+- Xem danh sách hợp đồng với phân trang (10 dòng/trang)
+- Tìm kiếm theo tên cư dân, mã hợp đồng
+- Lọc theo trạng thái
+- Tạo hợp đồng mới
+- Xem chi tiết hợp đồng
+- Chỉnh sửa hợp đồng
+- Kết thúc hợp đồng
 
-\`\`\`bash
-# 1. Clone project
-git clone <repository-url>
-cd dormitorymanagement
-
-# 2. Cài đặt dependencies
-npm install
-
-# 3. Chạy development server
-npm run dev
-
-# 4. Mở browser
-http://localhost:3000
-\`\`\`
-
-### 6.2 Tài khoản test
-
-\`\`\`
-Admin:
-- Username: admin
-- Password: admin123
-
-Resident:
-- Username: resident
-- Password: resident123
-\`\`\`
-
-### 6.3 Chuyển sang production
-
-#### Bước 1: Thay thế Mock Data bằng Database
-
-**Chọn database:**
-- PostgreSQL (khuyến nghị)
-- MySQL
-- MongoDB
-
-**Cài đặt ORM:**
-\`\`\`bash
-# Prisma (khuyến nghị)
-npm install prisma @prisma/client
-
-# Hoặc TypeORM
-npm install typeorm pg
-\`\`\`
-
-**Tạo schema:**
-\`\`\`prisma
-// prisma/schema.prisma
-model User {
-  id       String @id @default(uuid())
-  username String @unique
-  password String
-  role     String
-  name     String
-  email    String @unique
-  phone    String
-  // ... các field khác
-}
-
-model Resident {
-  id               String @id @default(uuid())
-  name             String
-  cccd             String @unique
-  studentId        String @unique
-  // ... các field khác
-  contracts        Contract[]
-  payments         Payment[]
-  maintenanceReqs  MaintenanceRequest[]
-  parkingRequests  ParkingRequest[]
-}
-
-// ... các model khác
-\`\`\`
-
-#### Bước 2: Tạo API Routes
-
-\`\`\`typescript
-// app/api/residents/route.ts
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-
-export async function GET() {
-  const residents = await prisma.resident.findMany()
-  return NextResponse.json(residents)
-}
-
-export async function POST(request: Request) {
-  const data = await request.json()
-  const resident = await prisma.resident.create({ data })
-  return NextResponse.json(resident)
-}
-\`\`\`
-
-#### Bước 3: Thay thế Mock Data
-
-\`\`\`typescript
-// Trước (mock):
-import { mockResidents } from '@/lib/mock-data'
-const residents = mockResidents
-
-// Sau (API):
-const [residents, setResidents] = useState([])
-
-useEffect(() => {
-  fetch('/api/residents')
-    .then(res => res.json())
-    .then(data => setResidents(data))
-}, [])
-\`\`\`
-
-#### Bước 4: Implement Authentication
-
-\`\`\`bash
-# Cài đặt NextAuth.js
-npm install next-auth
-\`\`\`
-
-\`\`\`typescript
-// app/api/auth/[...nextauth]/route.ts
-import NextAuth from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
-import { prisma } from '@/lib/prisma'
-import bcrypt from 'bcrypt'
-
-export const authOptions = {
-  providers: [
-    CredentialsProvider({
-      async authorize(credentials) {
-        const user = await prisma.user.findUnique({
-          where: { username: credentials.username }
-        })
-        
-        if (user && bcrypt.compareSync(credentials.password, user.password)) {
-          return user
-        }
-        return null
-      }
-    })
-  ]
-}
-
-const handler = NextAuth(authOptions)
-export { handler as GET, handler as POST }
-\`\`\`
-
-#### Bước 5: Deploy
-
-**Vercel (khuyến nghị cho Next.js):**
-\`\`\`bash
-# 1. Cài đặt Vercel CLI
-npm install -g vercel
-
-# 2. Login
-vercel login
-
-# 3. Deploy
-vercel --prod
-\`\`\`
-
-**Hoặc Docker:**
-\`\`\`dockerfile
-# Dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-\`\`\`
-
-### 6.4 Bảo mật
-
-1. **Hash password:**
-\`\`\`typescript
-import bcrypt from 'bcrypt'
-
-// Khi tạo user
-const hashedPassword = await bcrypt.hash(password, 10)
-
-// Khi login
-const isValid = await bcrypt.compare(password, user.password)
-\`\`\`
-
-2. **JWT Token:**
-\`\`\`typescript
-import jwt from 'jsonwebtoken'
-
-// Tạo token
-const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET)
-
-// Verify token
-const decoded = jwt.verify(token, process.env.JWT_SECRET)
-\`\`\`
-
-3. **Environment Variables:**
-\`\`\`env
-# .env.local
-DATABASE_URL="postgresql://..."
-JWT_SECRET="your-secret-key"
-NEXTAUTH_SECRET="your-nextauth-secret"
-\`\`\`
-
-### 6.5 Tối ưu hóa
-
-1. **Caching:**
-\`\`\`typescript
-// Sử dụng SWR
-import useSWR from 'swr'
-
-const { data, error } = useSWR('/api/residents', fetcher)
-\`\`\`
-
-2. **Pagination server-side:**
-\`\`\`typescript
-// API route
-export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const page = parseInt(searchParams.get('page') || '1')
-  const limit = 10
-  
-  const residents = await prisma.resident.findMany({
-    skip: (page - 1) * limit,
-    take: limit
-  })
-  
-  return NextResponse.json(residents)
-}
-\`\`\`
-
-3. **Image optimization:**
-\`\`\`typescript
-import Image from 'next/image'
-
-<Image 
-  src={resident.avatar || "/placeholder.svg"} 
-  alt={resident.name}
-  width={80}
-  height={80}
-  priority
-/>
-\`\`\`
+**Trạng thái hợp đồng**: Đang hoạt động, Sắp hết hạn, Đã kết thúc
 
 ---
 
-## 7. KẾT LUẬN
+### 3.5 Quản Lý BẢO TRÌ (Maintenance)
+**Đường dẫn**: `/maintenance`
 
-Hệ thống quản lý ký túc xá này được thiết kế với:
-- **Kiến trúc rõ ràng**: Phân tách logic, UI, data
-- **Dễ mở rộng**: Có thể thêm chức năng mới dễ dàng
-- **Responsive**: Tương thích mọi thiết bị
-- **Bảo mật**: Có thể nâng cấp lên production với authentication mạnh mẽ
+**Chức năng chính**:
+- Xem danh sách yêu cầu bảo trì với phân trang (10 dòng/trang)
+- Tìm kiếm theo tên cư dân, mã yêu cầu
+- Lọc theo: ưu tiên, trạng thái
+- Tạo yêu cầu bảo trì mới
+- Phân công nhân viên bảo trì
+- Cập nhật trạng thái (Chờ, Đang làm, Hoàn thành, Từ chối)
+- Xem lịch sử bảo trì
 
-Để triển khai thực tế, cần:
-1. Thay mock data bằng database thật
-2. Implement authentication với NextAuth.js
-3. Thêm validation và error handling
-4. Deploy lên server production
-5. Thêm monitoring và logging
+**Mức độ ưu tiên**: Thấp, Trung bình, Cao, Khẩn cấp
 
-Tài liệu này cung cấp đầy đủ thông tin để bạn hiểu và phát triển hệ thống.
+---
+
+### 3.6 Quản Lý ĐỖ XE (Parking)
+**Đường dẫn**: `/parking`
+
+**Chức năng chính**:
+- Xem danh sách yêu cầu đỗ xe với phân trang (10 dòng/trang)
+- Tìm kiếm và lọc yêu cầu
+- Phê duyệt/từ chối yêu cầu đỗ xe
+- Quản lý vị trí đỗ xe
+- Tính phí đỗ xe hàng tháng
+
+---
+
+### 3.7 Quản Lý TÀI CHÍNH (Finance)
+**Đường dẫn**: `/finance`
+
+**Chức năng chính**:
+- Xem tổng quan doanh thu
+- Phân tích chi phí
+- Báo cáo tài chính theo tháng/năm
+- Xu hướng doanh thu
+
+---
+
+### 3.8 Báo Cáo (Reports)
+**Đường dẫn**: `/reports`
+
+**Chức năng chính**:
+- Báo cáo cư dân
+- Báo cáo doanh thu
+- Báo cáo bảo trì
+- Xuất báo cáo PDF/Excel
+- Lập lịch báo cáo định kỳ
+
+---
+
+### 3.9 Quản Lý Ký Túc Xá (Manager)
+**Đường dẫn**: `/manager`
+
+**Các trang con**:
+- `/manager/residents-list` - Danh sách cư dân
+- `/manager/residents-add` - Thêm cư dân
+- `/manager/rooms-overview` - Tổng quan phòng
+- `/manager/rooms-manage` - Quản lý phòng
+- `/manager/rooms-pricing` - Giá phòng
+
+---
+
+### 3.10 Cài Đặt (Settings)
+**Đường dẫn**: `/settings`
+
+**Chức năng chính**:
+- Cài đặt hệ thống
+- Quản lý người dùng
+- Cài đặt thông báo
+
+---
+
+## 4. PHÂN TRANG (Pagination)
+
+### Tiêu Chuẩn Phân Trang
+- **Số dòng trên một trang**: 10 dòng
+- **Áp dụng cho**: Tất cả danh sách (cư dân, phòng, thanh toán, hợp đồng, bảo trì, đỗ xe, etc.)
+- **Kiểu phân trang**: Nút trước/sau + Nút số trang
+- **Hiển thị**: "Hiển thị X - Y trong tổng số Z"
+
+### Các Trang Sử Dụng Phân Trang
+1. `/residents` - Danh sách cư dân
+2. `/rooms` - Danh sách phòng
+3. `/payments` - Danh sách thanh toán
+4. `/contracts` - Danh sách hợp đồng
+5. `/maintenance` - Danh sách bảo trì
+6. `/parking` - Danh sách đỗ xe
+7. `/brokers` - Danh sách môi giới
+8. `/manager/residents-list` - Danh sách cư dân (Manager)
+9. `/manager/rooms-overview` - Danh sách phòng (Manager)
+10. Và các trang danh sách khác
+
+### Cách Hoạt Động
+```
+1. Người dùng xem trang 1 (10 dòng đầu tiên)
+2. Nếu có > 10 dòng, hiện nút phân trang
+3. Người dùng click nút "Sau" hoặc số trang
+4. Danh sách được tải lại với dữ liệu của trang đó
+5. Không làm mới toàn bộ trang, chỉ cập nhật dữ liệu bảng
+```
+
+---
+
+## 5. HỆ THỐNG XĐTICATION (Authentication)
+
+### Loại Tài Khoản
+
+**Admin Account**:
+- Tên đăng nhập: `admin`
+- Mật khẩu: `admin123`
+- Quyền truy cập: Tất cả các tính năng
+
+**Resident Account**:
+- Tên đăng nhập: `resident`
+- Mật khẩu: `resident123`
+- Quyền truy cập: Chỉ trang cư dân và thông tin cá nhân
+
+### Luồng Đăng Nhập
+1. Người dùng nhập tên đăng nhập và mật khẩu
+2. Hệ thống kiểm tra thông tin (hiện tại là mock, có thể kết nối API)
+3. Nếu đúng, lưu user info vào localStorage
+4. Chuyển hướng đến dashboard phù hợp (Admin → /admin, Resident → /resident)
+5. Nếu sai, hiển thị lỗi
+
+---
+
+## 6. TÍNH NĂNG LỌCCÓ ỨNG DỤNG
+
+### Lọc Được Áp Dụng
+- **Cư dân**: Giới tính, Trạng thái
+- **Phòng**: Loại phòng, Sức chứa, Trạng thái
+- **Thanh toán**: Trạng thái, Khách hàng, Phương thức, Tháng
+- **Hợp đồng**: Trạng thái
+- **Bảo trì**: Ưu tiên, Trạng thái
+- **Đỗ xe**: Ưu tiên, Trạng thái
+
+### Lọc ĐÃ XÓA
+- **Thanh toán**: Lọc "Chi nhánh" - Đã được xóa khỏi giao diện và logic
+  - Tất cả chi nhánh/ký túc xá giờ được chọn từ dropdown "Lựa chọn Ký Túc Xá" ở đầu trang hoặc từ profil người dùng
+  - Dữ liệu chi nhánh vẫn tồn tại nhưng không sử dụng để lọc
+
+- **Phòng**: Không bao giờ có lọc chi nhánh, chỉ có lựa chọn ký túc xá
+
+---
+
+## 7. TÍNH TOÁN THUẾ VÀ GIẢM GIÁ
+
+### VAT (Value Added Tax) - 10%
+- **Áp dụng cho**: Tất cả khoản thanh toán trong hệ thống
+- **Tỷ lệ**: 10%
+- **Công thức**: `Số tiền cuối = Số tiền gốc × 1.10`
+- **Hiển thị**: 
+  - Trong bảng danh sách: Hiển thị số tiền đã có VAT với ghi chú "(+10% VAT)"
+  - Trong biểu mẫu chi tiết: Hiển thị rõ ràng số tiền gốc và tiền VAT
+  - Trong báo cáo: Tất cả doanh thu đều tính VAT vào
+
+**Ví dụ tính toán**:
+```
+Số tiền gốc: 500.000đ
+VAT (10%): 50.000đ
+Tổng cộng: 550.000đ
+```
+
+### Quản Lý Doanh Thu
+- Tất cả báo cáo doanh thu hiển thị số tiền đã bao gồm VAT
+- Biểu mẫu thống kê: Tổng tiền phòng, Đã thu, Chờ thanh toán, Quá hạn - tất cả đều tính VAT
+
+---
+
+## 8. GIAO DIỆN NGƯỜI DÙNG (UI/UX)
+
+### Thiết Kế
+- **Màu chính**: Đen (#000000)
+- **Màu phụ**: Xám, Trắng
+- **Kiểu**: Modern, Clean, Minimalist
+- **Font**: Inter (Google Fonts)
+
+### Thành Phần UI
+- Button: Nút hành động với các trạng thái
+- Card: Chứa nội dung chính
+- Badge: Hiển thị trạng thái
+- Dialog/Modal: Form và xác nhận
+- Table: Danh sách dữ liệu
+- Select: Dropdown lựa chọn
+
+### Responsive Design
+- Desktop: Đầy đủ tất cả chức năng
+- Tablet: Giao diện tối ưu
+- Mobile: Giao diện rút gọn, dropdown menu
+
+---
+
+## 9. LUỒNG CÔNG VIỆC CHÍNH
+
+### Luồng Tiếp Nhận Cư Dân
+1. Admin vào `/residents` → Click "Thêm cư dân"
+2. Điền thông tin cư dân (Họ tên, Email, Điện thoại, CCCD, Giới tính, Trạng thái)
+3. Click "Lưu" → Cư dân được thêm vào danh sách
+4. Từ đó có thể tạo hợp đồng, thanh toán cho cư dân
+
+### Luồng Thanh Toán
+1. Admin vào `/payments` → Click "Tạo hóa đơn"
+2. Chọn hợp đồng, loại thanh toán, nhập số tiền
+3. Hệ thống tự động tính VAT 10%
+4. Click "Tạo hóa đơn" → Thanh toán được tạo
+5. Cư dân có thể nộp chứng minh (ảnh) thanh toán
+6. Admin duyệt chứng minh → Thanh toán xác nhận
+
+### Luồng Báo Cáo Bảo Trì
+1. Cư dân vào `/maintenance` → Click "Báo cáo bảo trì"
+2. Chọn loại vấn đề, mô tả chi tiết, ưu tiên
+3. Submit → Tạo yêu cầu bảo trì
+4. Admin xem yêu cầu → Phân công nhân viên
+5. Nhân viên hoàn thành → Admin xác nhận
+
+---
+
+## 10. DỮ LIỆU VÀ LƯỚI GHI
+
+### Nguồn Dữ Liệu (Hiện Tại)
+- **Mock Data**: Tất cả dữ liệu hiện tại được lưu trong `/lib/mock-data.ts`
+- Không có cơ sở dữ liệu thực, dữ liệu là giả lập
+
+### Cấu Trúc Dữ Liệu
+
+**Cư Dân (Resident)**
+```typescript
+{
+  id: string
+  name: string
+  email: string
+  phone: string
+  cccd: string
+  gender: string
+  avatar?: string
+  status: 'active' | 'pending' | 'expired'
+  createdDate: string
+}
+```
+
+**Thanh Toán (Payment)**
+```typescript
+{
+  id: string
+  contractId: string
+  residentName: string
+  residentId: string
+  roomName: string
+  amount: number           // Số tiền gốc (không bao gồm VAT)
+  type: string
+  dueDate: string
+  paidDate?: string
+  status: 'paid' | 'pending' | 'overdue'
+  method?: string
+  branch: string
+  proofImage?: string
+  note?: string
+}
+```
+
+**Phòng (Room)**
+```typescript
+{
+  id: string
+  number: string
+  type: string
+  floor: number
+  capacity: number
+  occupied: number
+  status: 'active' | 'full' | 'departure' | 'closed'
+  price: number
+  beds: Bed[]
+}
+```
+
+---
+
+## 11. HƯỚNG DẪN CHO CÁC THÀNH VIÊN
+
+### Cho Quản Trị Viên (Admin)
+1. Đăng nhập với tài khoản admin
+2. Quản lý toàn bộ hệ thống từ dashboard
+3. Sử dụng các tính năng:
+   - Thêm/sửa/xóa cư dân, phòng, hợp đồng
+   - Xem và duyệt thanh toán
+   - Xử lý yêu cầu bảo trì
+   - Xem báo cáo doanh thu
+
+### Cho Cư Dân (Resident)
+1. Đăng nhập với tài khoản resident
+2. Xem thông tin cá nhân của mình
+3. Xem hợp đồng và thanh toán
+4. Nộp minh chứng thanh toán
+5. Báo cáo yêu cầu bảo trì
+
+---
+
+## 12. TỐI ƯU HÓA VÀ HIỆU SUẤT
+
+### Phân Trang
+- Giảm tải dữ liệu: Chỉ hiển thị 10 dòng mỗi trang
+- Cải thiện tốc độ: Không tải toàn bộ dữ liệu cùng lúc
+- Tốt hơn cho UX: Dễ nhìn, dễ tìm kiếm
+
+### Tìm Kiếm
+- Tìm kiếm phía client (fast)
+- Hỗ trợ tìm kiếm theo nhiều trường
+- Cập nhật thực thi khi gõ
+
+### Lọc
+- Lọc tổng hợp: Áp dụng nhiều điều kiện cùng lúc
+- Xóa các lọc không cần thiết (chi nhánh thanh toán)
+- Giữ các lọc phổ biến
+
+---
+
+## 13. BẢNG CÓC CHÍNH CẦN LƯU Ý
+
+| Tính Năng | Vị Trí | Chú Ý |
+|-----------|-------|-------|
+| Phân trang | Tất cả danh sách | 10 dòng/trang cố định |
+| VAT 10% | `/payments` | Tự động tính trong stats và table |
+| Lọc chi nhánh | `/payments` | Đã xóa, không sử dụng |
+| Lựa chọn ký túc xá | `/rooms` | Vẫn hiện "selectedDormitory" để chọn KTX |
+| Hạn chế đăng nhập | `/page.tsx` | Mock auth, không kết nối API |
+| Metadata | `layout.tsx` | Cập nhật thông tin ứng dụng |
+
+---
+
+## 14. LỰA CHỌN HƯỚNG PHÁT TRIỂN
+
+### Các Tính Năng Cần Thêm Trong Tương Lai
+1. **Cơ sở dữ liệu thực**: Kết nối PostgreSQL/MongoDB
+2. **API backend**: Tạo API endpoints
+3. **Xác thực thực**: Sử dụng JWT, OAuth
+4. **Thông báo real-time**: WebSocket, push notifications
+5. **Xuất báo cáo**: PDF, Excel generation
+6. **Tính năng upload**: Cho ảnh, tài liệu
+7. **Quản lý vai trò**: Phân quyền chi tiết
+8. **Audit log**: Ghi lại mọi thay đổi
+9. **Backup tự động**: Backup dữ liệu định kỳ
+10. **Mobile app**: Ứng dụng di động
+
+---
+
+## 15. LIÊN HỆ VÀ HỖ TRỢ
+
+Để thêm tính năng hoặc báo cáo vấn đề, vui lòng liên hệ với nhóm phát triển.
+
+---
+
+**Tài liệu này cập nhật lần cuối**: 22/01/2026
+**Phiên bản tài liệu**: 1.0
+**Trạng thái**: Hoàn chỉnh
