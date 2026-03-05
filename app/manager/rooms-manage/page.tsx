@@ -32,10 +32,27 @@ export default function ManagerRoomsManagePage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
 
-  const filteredRooms = mockRooms.filter((room) => {
+  // Process mock data to match component expectations
+  const processedRooms = mockRooms.map((room) => {
+    const occupiedBeds = room.beds ? room.beds.filter((b: any) => b.status === "occupied").length : 0
+    const totalBeds = room.beds ? room.beds.length : 0
+    const status = occupiedBeds === totalBeds ? "occupied" : "available"
+    return {
+      ...room,
+      number: room.name,
+      status: status,
+      area: 30,
+      resident: room.beds
+        ?.map((b: any) => b.residentName)
+        .filter(Boolean)
+        .join(", "),
+    }
+  })
+
+  const filteredRooms = processedRooms.filter((room) => {
     const matchesSearch =
-      room.number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      room.type.toLowerCase().includes(searchTerm.toLowerCase())
+      (room.number?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (room.type?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || room.status === statusFilter
     return matchesSearch && matchesStatus
   })
@@ -152,7 +169,7 @@ export default function ManagerRoomsManagePage() {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-green-600">
-                  {mockRooms.filter((r) => r.status === "occupied").length}
+                  {processedRooms.filter((r) => r.status === "occupied").length}
                 </p>
                 <p className="text-sm text-gray-600">Đã thuê</p>
               </div>
@@ -162,7 +179,7 @@ export default function ManagerRoomsManagePage() {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">
-                  {mockRooms.filter((r) => r.status === "available").length}
+                  {processedRooms.filter((r) => r.status === "available").length}
                 </p>
                 <p className="text-sm text-gray-600">Còn trống</p>
               </div>
@@ -172,7 +189,7 @@ export default function ManagerRoomsManagePage() {
             <CardContent className="p-4">
               <div className="text-center">
                 <p className="text-2xl font-bold text-blue-600">
-                  {mockRooms.filter((r) => r.status === "departure").length}
+                  {processedRooms.filter((r) => r.status === "departure").length}
                 </p>
                 <p className="text-sm text-gray-600">Sắp trống</p>
               </div>
