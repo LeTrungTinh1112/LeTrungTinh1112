@@ -238,7 +238,7 @@ export default function ReportsPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis tickFormatter={(value) => `${value / 1000000}M`} />
-                    <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                    <Tooltip formatter={(value: number) => [formatCurrency(value), undefined]} />
                     <Line type="monotone" dataKey="revenue" stroke="#10B981" strokeWidth={3} name="Doanh thu" />
                     <Line type="monotone" dataKey="expenses" stroke="#EF4444" strokeWidth={3} name="Chi phí" />
                   </LineChart>
