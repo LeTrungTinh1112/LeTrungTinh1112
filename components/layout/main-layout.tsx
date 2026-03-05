@@ -11,6 +11,8 @@ import Link from "next/link"
 interface MainLayoutProps {
   children: React.ReactNode
   userRole?: string
+  currentPage?: string
+  onNavigate?: (page: string) => void
 }
 
 export function MainLayout({ children, userRole = "admin" }: MainLayoutProps) {
