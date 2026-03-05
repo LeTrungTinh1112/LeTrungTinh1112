@@ -70,7 +70,11 @@ export default function ManagerPage() {
 
   // Statistics calculations
   const totalRooms = mockRooms.length
-  const occupiedRooms = mockRooms.filter((room) => room.status === "occupied").length
+  const occupiedRooms = mockRooms.filter((room) => {
+    const occupiedBeds = room.beds ? room.beds.filter((b) => b.status === "occupied").length : 0
+    const totalBeds = room.beds ? room.beds.length : 0
+    return occupiedBeds === totalBeds && totalBeds > 0
+  }).length
   const totalResidents = mockResidents.length
   const activeContracts = mockContracts.filter((contract) => contract.status === "active").length
   const monthlyRevenue = mockPayments
